@@ -1,41 +1,54 @@
 import os
 import json
-from paddleocr import PaddleOCR
+import easyocr
+from PIL import Image
 
-PHOTOS_DIR = "photos"
-OUTPUT_FILE = "bib_index.json"
+# Configuration
+IMAGE_DIR = 'photos/'  # Local folder with rider images
+OUTPUT_JSON = 'bib_index.json'  # Output mapping file
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
+CONFIDENCE_THRESHOLD = 0.4
+MAX_DIGITS = 3
 
-ocr = PaddleOCR(use_textline_orientation=True, lang='en')
+# Initialize EasyOCR
+reader = easyocr.Reader(['en'], gpu=False)
 
-results_dict = {}
+# Prepare index: {bib_number: [list of image paths]}
+bib_index = {}
 
-for filename in os.listdir(PHOTOS_DIR):
-    if not filename.lower().endswith(('.jpg', '.jpeg', '.png')):
-        continue
+def is_image_file(filename):
+    return os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
 
-    image_path = os.path.join(PHOTOS_DIR, filename)
+def detect_bib_numbers(image_path):
     try:
-        results = ocr.ocr(image_path)
-        for line in results[0]:
-            text = line[1][0]
-            conf = line[1][1]
-
-            if conf < 0.3:
-                continue
-
-            digits = ''.join(filter(str.isdigit, text))
-            if not digits or len(digits) > 3:
-                continue
-
-            if digits not in results_dict:
-                results_dict[digits] = []
-
-            results_dict[digits].append(image_path)
-
+        results = reader.readtext(image_path)
+        bibs = []
+        for (bbox, text, confidence) in results:
+            cleaned = text.replace(" ", "").strip()
+            if cleaned.isdigit() and confidence > CONFIDENCE_THRESHOLD and len(cleaned) <= MAX_DIGITS:
+                bibs.append(cleaned)
+        return bibs
     except Exception as e:
         print(f"Error processing {image_path}: {e}")
+        return []
 
-with open(OUTPUT_FILE, "w") as f:
-    json.dump(results_dict, f, indent=2)
+def main():
+    for fname in os.listdir(IMAGE_DIR):
+        if not is_image_file(fname):
+            continue
 
-print("Bib detection completed. Results saved to bib_index.json")
+        fpath = os.path.join(IMAGE_DIR, fname)
+        bibs = detect_bib_numbers(fpath)
+
+        for bib in bibs:
+            if bib not in bib_index:
+                bib_index[bib] = []
+            bib_index[bib].append(fpath)
+
+    with open(OUTPUT_JSON, 'w') as f:
+        json.dump(bib_index, f, indent=2)
+
+    print(f"✅ Bib detection completed. Results saved to {OUTPUT_JSON}")
+
+if __name__ == '__main__':
+    main()
