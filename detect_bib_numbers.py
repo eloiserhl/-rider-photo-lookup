@@ -8,18 +8,33 @@ from PIL import Image
 IMAGE_DIR = 'photos/'
 OUTPUT_JSON = 'bib_index.json'
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
+MAX_SIDE = 4000
 
-# Initialize PaddleOCR correctly with updated params
 ocr = PaddleOCR(use_textline_orientation=True, lang='en')
-
 bib_index = {}
 
 def is_image_file(filename):
     return os.path.splitext(filename)[1].lower() in ALLOWED_EXTENSIONS
 
+def resize_image_if_needed(img):
+    w, h = img.size
+    if max(w, h) > MAX_SIDE:
+        if w > h:
+            new_w = MAX_SIDE
+            new_h = int(h * MAX_SIDE / w)
+        else:
+            new_h = MAX_SIDE
+            new_w = int(w * MAX_SIDE / h)
+        return img.resize((new_w, new_h))
+    return img
+
 def detect_bib_numbers(image_path):
     try:
-        results = ocr.ocr(image_path)
+        with Image.open(image_path) as img:
+            img = resize_image_if_needed(img)
+            img = img.convert('RGB')
+            results = ocr.ocr(img)
+
         bibs = set()
         for line in results[0]:
             text, confidence = line[1][0], line[1][1]
