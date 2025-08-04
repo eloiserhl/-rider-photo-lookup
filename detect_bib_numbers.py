@@ -24,7 +24,7 @@ def detect_bib_numbers(image_path):
         for line in results[0]:
             text, confidence = line[1][0], line[1][1]
             cleaned = text.replace(" ", "").strip()
-            if confidence >= 0.5 and cleaned.isdigit() and 2 <= len(cleaned) <= 3:
+            if confidence >= 0.4 and cleaned.isdigit() and 2 <= len(cleaned) <= 3:
                 bibs.add(cleaned)
         return list(bibs)
     except Exception as e:
