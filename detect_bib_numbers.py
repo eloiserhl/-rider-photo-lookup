@@ -1,3 +1,4 @@
+""
 import os
 import json
 from paddleocr import PaddleOCR
@@ -50,4 +51,4 @@ def main():
     print(f"Bib detection completed. Results saved to {OUTPUT_JSON}")
 
 if __name__ == '__main__':
-    main()"
+    main()
