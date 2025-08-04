@@ -1,6 +1,6 @@
 import os
 import json
-import easyocr
+from paddleocr import PaddleOCR
 from PIL import Image
 
 # Configuration
@@ -8,8 +8,8 @@ IMAGE_DIR = 'photos/'  # Local folder with rider images
 OUTPUT_JSON = 'bib_index.json'  # Output mapping file
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
 
-# Initialize EasyOCR
-reader = easyocr.Reader(['en'], gpu=False)
+# Initialize PaddleOCR
+ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
 
 # Prepare index: {bib_number: [list of image paths]}
 bib_index = {}
@@ -19,15 +19,14 @@ def is_image_file(filename):
 
 def detect_bib_numbers(image_path):
     try:
-        results = reader.readtext(image_path)
-        bibs = []
-        for (bbox, text, confidence) in results:
-            if confidence < 0.5:
-                continue
+        results = ocr.ocr(image_path, cls=True)
+        bibs = set()
+        for line in results[0]:
+            text, confidence = line[1][0], line[1][1]
             cleaned = text.replace(" ", "").strip()
-            if cleaned.isdigit() and 1 <= len(cleaned) <= 3:
-                bibs.append(cleaned)
-        return bibs
+            if confidence >= 0.5 and cleaned.isdigit() and 2 <= len(cleaned) <= 3:
+                bibs.add(cleaned)
+        return list(bibs)
     except Exception as e:
         print(f"Error processing {image_path}: {e}")
         return []
@@ -43,7 +42,8 @@ def main():
         for bib in bibs:
             if bib not in bib_index:
                 bib_index[bib] = []
-            bib_index[bib].append(fpath)
+            if fpath not in bib_index[bib]:
+                bib_index[bib].append(fpath)
 
     with open(OUTPUT_JSON, 'w') as f:
         json.dump(bib_index, f, indent=2)
