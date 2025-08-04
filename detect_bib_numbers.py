@@ -1,4 +1,3 @@
-code .
 import os
 import json
 import easyocr
@@ -23,8 +22,10 @@ def detect_bib_numbers(image_path):
         results = reader.readtext(image_path)
         bibs = []
         for (bbox, text, confidence) in results:
+            if confidence < 0.5:
+                continue
             cleaned = text.replace(" ", "").strip()
-            if cleaned.isdigit() and 1 <= len(cleaned) <= 5:
+            if cleaned.isdigit() and 1 <= len(cleaned) <= 3:
                 bibs.append(cleaned)
         return bibs
     except Exception as e:
