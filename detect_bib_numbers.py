@@ -9,7 +9,7 @@ OUTPUT_JSON = 'bib_index.json'  # Output mapping file
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
 
 # Initialize PaddleOCR
-ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
+ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
 # Prepare index: {bib_number: [list of image paths]}
 bib_index = {}
