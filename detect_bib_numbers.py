@@ -4,14 +4,13 @@ from paddleocr import PaddleOCR
 from PIL import Image
 
 # Configuration
-IMAGE_DIR = 'photos/'  # Local folder with rider images
-OUTPUT_JSON = 'bib_index.json'  # Output mapping file
+IMAGE_DIR = 'photos/'
+OUTPUT_JSON = 'bib_index.json'
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
 
-# Initialize PaddleOCR
-ocr = PaddleOCR(use_angle_cls=True, lang='en')
+# Initialize PaddleOCR correctly with updated params
+ocr = PaddleOCR(use_textline_orientation=True, lang='en')
 
-# Prepare index: {bib_number: [list of image paths]}
 bib_index = {}
 
 def is_image_file(filename):
@@ -19,7 +18,7 @@ def is_image_file(filename):
 
 def detect_bib_numbers(image_path):
     try:
-        results = ocr.ocr(image_path, cls=True)
+        results = ocr.ocr(image_path)
         bibs = set()
         for line in results[0]:
             text, confidence = line[1][0], line[1][1]
@@ -51,4 +50,4 @@ def main():
     print(f"Bib detection completed. Results saved to {OUTPUT_JSON}")
 
 if __name__ == '__main__':
-    main()
+    main()"
