@@ -4,8 +4,8 @@ import easyocr
 from PIL import Image
 
 # Configuration
-IMAGE_DIR = 'photos/'  # Local folder with rider images
-OUTPUT_JSON = 'bib_index.json'  # Output mapping file
+IMAGE_DIR = 'photos/'
+OUTPUT_JSON = 'bib_index.json'
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png'}
 CONFIDENCE_THRESHOLD = 0.4
 MAX_DIGITS = 3
